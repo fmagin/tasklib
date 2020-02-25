@@ -7,9 +7,10 @@ import os
 import re
 import subprocess
 from functools import lru_cache
+from typing import List
 
 from .task import Task, TaskQuerySet, ReadOnlyDictView
-from .filters import TaskWarriorFilter
+from .filters import TaskWarriorFilter, TaskFilter
 from .serializing import local_zone
 
 DATE_FORMAT_CALC = '%Y-%m-%dT%H:%M:%S'
@@ -25,7 +26,7 @@ class Backend(object):
         pass
 
     @abc.abstractmethod
-    def filter_tasks(self, filter_obj):
+    def filter_tasks(self, filter_obj: TaskFilter) -> List[Task]:
         """Returns a list of Task objects matching the given filter"""
         pass
 
@@ -327,7 +328,7 @@ class TaskWarrior(Backend):
 
     # Backend interface implementation
 
-    def filter_tasks(self, filter_obj):
+    def filter_tasks(self, filter_obj: TaskWarriorFilter):
         self.enforce_recurrence()
         args = ['export'] + filter_obj.get_filter_params()
         tasks = []

@@ -5,8 +5,15 @@ import json
 import logging
 import os
 import sys
+from typing import Optional, Type, TypeVar, List, TYPE_CHECKING
 
+from .filters import TaskFilter
 from .serializing import SerializingObject
+
+
+if TYPE_CHECKING:
+    from .backends import Backend
+
 
 DATE_FORMAT = '%Y%m%dT%H%M%SZ'
 REPR_OUTPUT_SIZE = 10
@@ -442,11 +449,11 @@ class TaskQuerySet(object):
     """
     Represents a lazy lookup for a task objects.
     """
-
+    backend: 'Backend'
     def __init__(self, backend, filter_obj=None):
         self.backend = backend
-        self._result_cache = None
-        self.filter_obj = filter_obj or self.backend.filter_class(backend)
+        self._result_cache: Optional[List[Task]] = None
+        self.filter_obj: TaskFilter = filter_obj or self.backend.filter_class(backend)
 
     def __deepcopy__(self, memo):
         """
@@ -472,8 +479,8 @@ class TaskQuerySet(object):
         return len(self._result_cache)
 
     def __iter__(self):
-        if self._result_cache is None:
-            self._result_cache = self._execute()
+        #if self._result_cache is None:
+        self._result_cache = self._execute()
         return iter(self._result_cache)
 
     def __getitem__(self, k):
@@ -493,11 +500,10 @@ class TaskQuerySet(object):
     def __nonzero__(self):
         return type(self).__bool__(self)
 
-    def _clone(self, klass=None, **kwargs):
-        if klass is None:
-            klass = self.__class__
+    def _clone(self: 'TaskQuerySet', klass: Optional[Type['TaskQuerySet']] = None, **kwargs):
+        _klass: Type['TaskQuerySet'] = klass or self.__class__
         filter_obj = self.filter_obj.clone()
-        c = klass(backend=self.backend, filter_obj=filter_obj)
+        c = _klass(backend=self.backend, filter_obj=filter_obj)
         c.__dict__.update(kwargs)
         return c
 
