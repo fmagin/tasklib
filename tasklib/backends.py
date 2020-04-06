@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class Backend(object):
-
+    tasks: TaskQuerySet
     @abc.abstractproperty
     def filter_class(self):
         """Returns the TaskFilter class used by this backend"""
