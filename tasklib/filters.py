@@ -1,6 +1,9 @@
 import abc
+from typing import TypeVar
+
 from .serializing import SerializingObject
 
+Entity = TypeVar('Entity', bound='TaskFilter')
 
 class TaskFilter(object):
     """
@@ -22,7 +25,7 @@ class TaskFilter(object):
         pass
 
     @abc.abstractmethod
-    def clone(self):
+    def clone(self: Entity) -> Entity:
         """
         Returns a new deep copy of itself.
         """

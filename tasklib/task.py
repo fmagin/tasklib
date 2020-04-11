@@ -5,8 +5,15 @@ import json
 import logging
 import os
 import sys
+from typing import Optional, Type, TypeVar, List, TYPE_CHECKING
 
+from .filters import TaskFilter
 from .serializing import SerializingObject
+
+
+if TYPE_CHECKING:
+    from .backends import Backend
+
 
 DATE_FORMAT = '%Y%m%dT%H%M%SZ'
 REPR_OUTPUT_SIZE = 10
@@ -442,6 +449,9 @@ class TaskQuerySet(object):
     """
     Represents a lazy lookup for a task objects.
     """
+    backend: 'Backend'
+    _result_cache: Optional[List[Task]]
+    filter_obj: TaskFilter
 
     def __init__(self, backend, filter_obj=None):
         self.backend = backend
@@ -493,11 +503,10 @@ class TaskQuerySet(object):
     def __nonzero__(self):
         return type(self).__bool__(self)
 
-    def _clone(self, klass=None, **kwargs):
-        if klass is None:
-            klass = self.__class__
+    def _clone(self: 'TaskQuerySet', klass: Optional[Type['TaskQuerySet']] = None, **kwargs):
+        _klass: Type['TaskQuerySet'] = klass or self.__class__
         filter_obj = self.filter_obj.clone()
-        c = klass(backend=self.backend, filter_obj=filter_obj)
+        c = _klass(backend=self.backend, filter_obj=filter_obj)
         c.__dict__.update(kwargs)
         return c
 
